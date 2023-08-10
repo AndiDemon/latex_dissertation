@@ -1,0 +1,587 @@
+% this file is called up by thesis.tex
+% content in this file will be fed into the main document
+
+%: ----------------------- name of chapter  -------------------------
+\chapter{Temporal-Spatial Time Series Self-Attention for 2D and 3D Human Motion Forecasting}\label{4} % top level followed by section, subsection
+
+\section{Introduction}\label{4:intro}
+In this section, the author describes the detail of human motion forecasting using 3D data.
+In the same way, that human motion forecasting using 2D, using the 3D features has its advantages. The devices to capture the 3D features are broadly developed and produced in the market. For example, the light detection and ranging (LiDAR) camera is developed to capture the depth parameter in a frame. This feature has unlocked the ability to get the third parameter of location over the 2D image frame. Additionally, with the depth parameter, the object detection method could work more precisely to localize the object over the 3D plane recognition. Regarding that, the research on human motion forecasting using 3D data is applicable in the real world, unlocking the application of automation over devices. Adding one more parameter in motion prediction also gives the model another weight to calculate, but also gives extra information to predict better. While the 2D human prediction is evaluated in pixels, the 3D data gives the ability to transform the data into real metrics like millimeters to evaluate and process the visualization in the 3D plane. 
+
+Several research addressed the model to forecast based on the temporal dimension, with the Recurrent Neural Network\cite{fragkiadaki2015recurrent}, LSTM\cite{fragkiadaki2015recurrent, lstm}, and Triangular Prism RNN method~\cite{chiu2019}. While some other research modeled the forecasting using the spatial and temporal dimensions such as the STS-GCN\cite{Sofianos2021} and MotionMixer\cite{motionmixer2022}. However, understanding the motion based on spatial and temporal dimensions is needed to improve the prediction. Understanding over relation and connection of the spatial and temporal dimensions is necessary.
+In this research, we improved the method used in the Section. \ref{3} by applying Multi-Layer Perceptron (MLP) for temporal dimension computation. We applied this method for the 2D and 3D human motion forecasting tasks. This research is conducted to provide the feasibility of human motion forecasting in real-world applications using 2D and 3D input.
+\begin{itemize}
+    \item We propose a novel self-attention architecture for human motion forecasting tasks.
+    \item We propose a feasibility study on the usability of human motion forecasting applications using unannotated data.
+    \item We provide the standard evaluation metric and compare previous related works in human motion forecasting.
+    \item Our code available at: \href{https://github.com/AndiDemon/HumMovForecasting}{https://github.com/AndiDemon/HumMovForecasting}.
+\end{itemize}
+
+
+\section{Related Works}\label{4:related_workd}
+In this section, the author describes the previous related research in which those similarities are found and compared with regard to the dataset, methods, and evaluation metrics. 
+
+Based on the baseline, the research on 3D human motion forecasting has been settled on the results over certain evaluation metrics. Started from~\cite{fragkiadaki2015recurrent} that aims to recognize and predict the human body pose in videos and motion capture by the encoder recurrent decoder (ERD) model using the Human3.6M dataset. As a result, the prediction of human motion obtained the short-term prediction for 400ms and the long-term prediction for 1000ms. They provided a comparison with state-of-the-art methods such as RNN-LSTM-3LR, CRBM, 6GRAM, and GDPM in walking motion by Mean Angle Error (MAE). Following the research to predict human motion, several works have been done. One research is conducted by using the Structural-RNN model~\cite{jain2016}. As a result, the proposed method using S-RNN successfully improved the performance in the MAE metric on the Eating, Walking, Smoking, and Discussion actions. While more works have been published with better performance based on the MAE~\cite{motionmixer2022}, the other metric to evaluate the model based on the distance from the prediction result to the ground truth has been introduced~\cite{Sofianos2021} and followed by~\cite{motionmixer2022}. Furthermore, not only using the Human3.6M dataset, the comparison over another dataset such as AMASS~\cite{AMASS2019} is conducted to validate the various samples and actions.
+Comparing the models on different datasets and more actions done, this research broadly improved the validation of real-life applications.
+
+Hence, this research is still ongoing, and more state-of-the-art methods, such as the Transformers model~\cite{vaswani2017}, have been introduced. The author follows the previous related research to develop the best performance on the MPJPE, MAE, and additionally MPJVE, which is just as important as the other metric to show the smoothness over the changes of the frames. Since the author has researched 2D human motion forecasting, the time-series self-attention is modified to process the 3D data.
+
+\section{Feature Preparation}\label{4:3Dfeaturepreparation}
+In this section, the author describes the data preparation and pre-processing of the 3D features.
+Similarly, the process is almost the same after the 3D data transformation, given the data with 33 key points all over the human body, including the fingers. At the same time, the features of fingers are not necessary for this research since they will not give more information about human motions. Hence, the key points regarding the fingers are ignored, which remains the 22 key points left. 
+Let the sequence data $\mathcal{X} = \{ X_1, X_2, \ldots ,X_T \} \in \mathbb{R}^{3 \times N \times T}$, where $T$ is defined as the number of frames for $N$ key points. 
+Setting up the sliding window of $\mathcal{Q} = \{ Q_1, Q_2, \ldots ,Q_{T_Q} \}$ input, and $\mathcal{P} = \{ P_{T_{Q}+1}, P_{T_{Q}+2}, \ldots ,P_{T_Q + T_P} \}$ expected output.
+Aiming to predict the $N$ key points for the next $T_Q + T_P$ future frames $\hat{P} = \{ \hat{P}_{T_{Q}+1}, \hat{P}_{T_{Q}+2}, \ldots ,\hat{P}_{T_Q + T_P} \}$ respectively to the frames. As for the subject on the Human3.6M dataset, the training data includes subject numbers 1, 6, 7, 8, and 9. Subject number 11 is used as the validation data, and subject number 5 is used as the testing data. This setting is used in several related research to keep the comparison between the methods in line~\cite{Sofianos2021, motionmixer2022}. 
+
+\section{Proposed Method}\label{4:method}
+\subsection{Temporal-Spatial Time Series Self-Attention}\label{4:tssa}
+In this section, the author describes the detail of the prediction method model. As described in the~\ref{fig:cnn+trans}, the architecture of the model is quite different when using 2D features. Given the 3D features in the shape of $(batch\_size, input_window_frames, \mathcal{Q})$ as the input, it is processed with positional encoding and dropout layers. 
+Then, the CNN block layer with SE Block and the Add layer. 
+After that, this step is repeated by $L$ times. 
+Following the CNN block step, Transformer Encoder with SE Block and Add layer is applied repeatedly by $M$ times. Finally, the tensors are finalized by the MLP Head layer to obtain the prediction. 
+
+\begin{figure}
+    \centering
+    \includegraphics[width=\linewidth]{./4/figures/spatial_temporal_tssa.eps}
+    \caption{
+        Temporal-Spatial Time Series Self-Attention architecture for 2D and 3D human motion forecasting. We defined the pose\_dim as the input pose dimension that differs based on the dataset, frames\_dim as the number of input frames, hidden\_dim as the hidden dimension on the neural network, and output\_frame\_dim as the expected frame output dimension.
+        The input data are processed by the positional encoding and dropout layer.
+        The first unit consists of the CNN block, the squeeze-and-excitation (SE) block, and the skip connection as the temporal dimension computation.
+        The first unit is repeated $L$ times.
+        Then followed by the second unit which consists of the transformer encoder block, the SE block, and the skip connection for context-relation awareness.
+        The second block is repeated $M$ times.
+        Finally, the multilayer perceptron (MLP) Head computes the spatial dimension prediction, and we use the 1D convolutional layer to transform the frame dimension for the output.
+    }
+    \label{fig:cnn+trans}
+\end{figure}
+\subsection{Loss Metric}\label{4:loss_metric}
+In this section, the author describes the detail of the method to evaluate the method in the training and testing phase. 
+These evaluation metrics are used as the loss function and to evaluate the method regarding the prediction results.
+
+Following the metric evaluation protocol from previous related research. MPJPE is employed to evaluate the Euclidean distance between the forecasting result to the ground truth using the cartesian coordinate\cite{Sofianos2021,motionmixer2022}. At the same time, MAE is used to evaluate based on the Eular-angle representation\cite{Sofianos2021,motionmixer2022}. MPJPE is defined as:
+
+% The most commonly used evaluation metric regarding coordinate prediction is the distance between the prediction to the ground truth data. Computing the L2 Norm over each key point sufficiently explains the error of the prediction. Hence, the MPJPE is considered the reliable evaluation metric standard. 
+
+% \begin{equation}\label{eq:mpjpe3D}
+%     E_\mathrm{MPJPE} =
+%         \frac{1}{J \times T_f} \sum_{j=1}^{J} \sum_{t=T_h + 1}^{T_h + T_f}
+%         \| \mathbf{\hat{x}}_{t,j} - \mathbf{x}_{t,j} \|_2
+% \end{equation}
+
+\begin{equation}\label{eq:mpjpe3D}
+    E_\mathrm{MPJPE} =
+        \frac{1}{N}
+        \| \mathbf{P}_{T_p} - \mathbf{\hat{P}}_{T_p} \|
+\end{equation}
+where $N$ is the total number of frames in the testing data, $\hat{P}_{T_P}$ determines the prediction on the number $T_p$ frame of the output window, and the $P_{T_p}$ is the corresponding ground truth.
+
+Processing 3D data gives another parameter in the way to understand the direction of the human body. As for this matter, the evaluation metric is needed to evaluate the correctness of the prediction by the model. Mean Angle Error is determined to evaluate the prediction by computing the Euler rotation data processed by the model as the input. MAE is defined by:
+
+% \begin{equation}\label{eq:mae3D}
+%     E_\mathrm{MAE} =
+%         \frac{1}{J \times T_f} \sum_{j=1}^{J} \sum_{t=T_h + 1}^{T_h + T_f}
+%         \| \mathbf{\hat{x}}_{t,j} - \mathbf{x}_{t,j} \|_2
+% \end{equation}
+\begin{equation}\label{eq:mae3D}
+    E_\mathrm{MAE} =
+        \frac{1}{N}
+        \| \mathbf{P}_{T_p} - \mathbf{\hat{P}}_{T_p} \|
+\end{equation}
+where $N$ is the total number of frames in the testing data, $\hat{P}_{T_P}$ determines the prediction on the number $T_p$ frame of the output window, and the $P_{T_p}$ is the corresponding ground truth.
+
+
+\section{Experiments}\label{4:experiment}
+In this section, the author describes the overall experimental details, which include dataset setup, experimental setup, model configuration, and the device used to perform the experiment.
+\subsection{Dataset}\label{4:dataset}
+In this section, the author describes the dataset that is used in this research as well as the dataset setup.
+Similar to the research on 2D human motion forecasting in Section.~\ref{2}, the Human3.6M dataset is used as the main dataset to be evaluated with other previous related research however, if the 2D human motion forecasting research using the 2D input data that has been interpolated from the 3D data. In this research, the input data is the 3D cartesian coordinates and the Euler angle rotation map obtained by motion capture of the camera sensors. The data is divided into training, validation, and testing. The training data consists of subject numbers 1, 6, 7, 8, and 9. While subject number 11 is determined as the validation data, and subject number 5 is the testing data. 22 joints for forecasting the 3D body pose as the input and 16 for the angle-based prediction. 
+
+At the same time, the AMASS dataset is used to validate the method on another dataset. AMASS dataset is separated by training, validation, and testing data based on the sub-dataset provided in AMASS. Training data contains the samples, including CMU, MPI Limits, TotalCapture, Eyes Japan Dataset, KIT, EKUT, TCD handMocap, and ACCAD. 
+Validation data contains the samples, including HumanEva, MPI HDM05, SFU, and MPI mosh. The testing data contains a sample of BioMotionLab NTroje. In this dataset, the 3D cartesian coordinates data is used with 18 key points as the input.
+
+\subsection{Experimental Setup}\label{4:experiment_setup}
+In this section, the author describes the experimental setup used to configure the features, train the model, and visualize the prediction. Part of this research is done by the previous research to keep the comparison in line with the previous related research~\cite{motionmixer2022}. The input window in this research is ten frames consecutively with the option of 1 or 5 steps over the sliding window. Expecting the 10 or 25 frames as the output in the sliding window to get the output of 400ms or 1000ms. As shown in the model overview, the CNN block layer is repeated three times, and the Transformer Encoder layer is repeated two times. The dropout layer is defined by 0.1, with the learning rate to train the model being 0.0001 using the ADAM optimizer. As for the loss function, the MPJPE is used to calculate when the coordinate data is used, and MAE is used to calculate the loss when the angle rotation is used. The author used the NVidia GeForce RTX 4090 to perform the experiment.
+
+\section{Results}\label{4:results}
+\subsection{Quantitative Evaluation}\label{4:quant}
+In this section, the author describes the evaluation results based on the MPJPE and MAE metrics for short-term and long-term 3D human motion prediction tasks.
+
+\subsubsection{2D Human Motion Forecasting}\label{4:quant_3D}
+\textbf{Human3.6M Dataset}
+
+\textbf{Comparison based on MPJPE.}
+Table~\ref{tbl:4_2D_gt_mpjpe} shows the MPJPE for short and long-term forecasting tasks and Table~\ref{tbl:4_2D_gt_mpjve} shows the MPJVE to measure the proximity between the ground truth and the prediction in terms of joint positions and velocities, respectively. In comparison, LSTM\cite{lstm} and GRU\cite{gru} are employed to predict human motion. The results show that our method outperformed the other two methods in terms of both MPJPE and MPJVE at both time intervals. Specifically, our method achieved an MPJPE of 12.32 and 15.17 pixels and an MPJVE of 0.87 and 1.19 pixels at \qtylist{400; 1000}{\milli\second}, respectively, while the other methods achieved lower performance on both metrics. Table~\ref{tbl:4_2D_OpenPose} shows the MPJE and MPJVE metrics when the data obtained by OpenPose is used. Compared to the ground truth test, MPJPE is significantly changed from 12.32 to 30.78 pixels on our method at \SI{400}{\milli\second} prediction task and 15.17 to 34.96 pixels at \SI{1000}{\milli\second} prediction task. While on LSTM and GRU, the MPJPE is changed, but not more than 2 times the ground truth testing.
+Furthermore, the evaluation of MPJVE is also increased significantly. These changes happened due to the uncertainty of the pose estimation obtained by OpenPose. However, to evaluate whether the forecasting result is reliable or not, the qualitative evaluation is explained in section~\ref{4:qual_evaluation}.
+
+3DPW dataset is used to evaluate the model on outdoor activity with undefined scenarios. As shown in table~\ref{tbl:4_2D_3DPW}, the forecasting result is evaluated based on the MPJPE metric. Our method obtained the best forecasting result compared to the LSTM and GRU. However, the MPJPE metric obtained is too big compared to the dataset frame size. This forecasting failure appeared due to the undefined scenarios of the 3DPW dataset. This summarizes our method is not reliable in the unknown scenario activity.
+
+\begin{table}
+    \centering
+    \caption{MPJPE of 2D joint positions in pixel on the Human3.6M dataset using the real position data as the testing data.}
+    \resizebox{\textwidth}{!}{\begin{tabular}{l|ccc|ccc}
+        \toprule
+        \multirow{2}{*}{\textbf{Motion}} & \multicolumn{3}{c|}{400 msec} & \multicolumn{3}{c}{1000 msec} \\
+            & \textbf{TS-TSSA (Ours)}  & LSTM & GRU & \textbf{TS-TSSA (Ours)}  & LSTM & GRU  \\
+        \midrule
+        Walking	&	\textbf{14.06}	&	14.38	&	13.90 &	\textbf{19.61}	&	12.11	&	12.74\\
+        Eating	&	\textbf{7.17}	&	13.14	&	14.48	& \textbf{9.01}	&	14.09	&	13.02\\
+        Smoking	&	\textbf{7.10}	&	16.47	&	17.40	&	\textbf{9.81}	&	15.21	&	16.53\\
+        Discussion	&	\textbf{12.37}	&	20.62	& 20.75  &	\textbf{16.94}	&	21.21	&	19.48\\
+        Direction	&	\textbf{9.33}	&	21.55	& 21.77 &	\textbf{12.25}	&	20.35	&	20.56\\
+        Greeting	&	\textbf{8.24}	&	36.67	& 35.42  &	\textbf{14.72}	&	33.92	&	32.56\\
+        Phoning	&	\textbf{10.80}	&	19.00	&	18.89 	&	\textbf{14.46}	&	18.41	&	16.93\\
+        Waiting	&	\textbf{9.92}	&	26.98	&	25.84 & \textbf{12.37}	&	24.46	&	22.37\\
+        Walking Dog	&	\textbf{10.69}	&	41.19	&	39.60 &	\textbf{13.48}	&	39.99	&	38.82\\
+        Walking Together	&	\textbf{12.00}	&	45.42	&	46.32	&	\textbf{12.26}	&	40.82	&	29.62\\
+        Posing	&	\textbf{8.19}	&	30.76	&	27.86	&	\textbf{16.17}	&	26.38	&	25.96\\
+        Sitting	&	\textbf{18.37}	&	18.91	&	21.74		&	\textbf{19.45}	&	20.73	&	19.48\\
+        Sitting Down	&	31.80	&	\textbf{27.95}	&	28.84 &	32.98	&	31.25	&	\textbf{25.74} \\
+        Taking Photo	&	\textbf{6.52}	&	36.58	&	34.52	 &	\textbf{8.93}	&	40.70	&	29.50\\
+
+        \midrule
+        Average	&	\textbf{12.32}	&	26.40	&	26.24	&	\textbf{15.17}	&	25.69	&	23.09\\
+        \bottomrule
+    \end{tabular}}
+    \label{tbl:4_2D_gt_mpjpe}
+\end{table}
+
+\begin{table}
+    \centering
+    \caption{MPJVE of 2D joint positions in pixel on the Human3.6M dataset using the real position data as the testing data.}
+    \resizebox{\textwidth}{!}{\begin{tabular}{l|ccc|ccc}
+        \toprule
+        \multirow{2}{*}{\textbf{Motion}} & \multicolumn{3}{c|}{400 msec} & \multicolumn{3}{c}{1000 msec} \\
+            & \textbf{TS-TSSA (Ours)}  & LSTM & GRU & \textbf{TS-TSSA (Ours)}  & LSTM & GRU  \\
+        \midrule
+        Walking	&	\textbf{1.06}	&	1.15	&	1.23   & 1.16	&	\textbf{1.07}	&	1.22\\
+        Eating	&	\textbf{0.64}	&	0.97	&	1.00   & \textbf{0.79}	&	1.04	&	1.10\\
+        Smoking	&	\textbf{0.56}	& 0.86	& 0.89         & \textbf{0.79}	&	0.84	&	0.88\\
+        Discussion	& \textbf{1.03}	& 1.27	& 1.33         & 1.59	&	\textbf{1.31}	&	1.24\\
+        Direction	& \textbf{0.67}	& 1.15 & 1.23          & \textbf{1.09}	&	1.15	&	1.16 \\
+        Greeting	& \textbf{1.21}	& 2.77 & 2.91          & \textbf{1.54}	&	2.39	&	2.67\\
+        Phoning	&	\textbf{0.86}	&	1.11	&	1.10   & 1.15	&	\textbf{1.11}	&	1.14 \\
+        Waiting	&	\textbf{0.89}	&	1.60	&	1.62   & \textbf{1.28}	&	1.45	&	1.62 \\
+        Walking Dog	& \textbf{1.15}	&	2.51	&	2.38   & \textbf{1.68}	&	2.16	&	2.37 \\
+        Walking Together & \textbf{0.69} & 2.36 &	2.35   & \textbf{0.98}	& 2.00	&	2.03 \\
+        Posing	&	\textbf{1.04}	&	1.58	&	1.60   & \textbf{1.46}	&	1.58	&	1.67\\
+        Sitting	&	\textbf{0.67}	&	1.18	&	1.44   & \textbf{0.88}	&	1.41	&	1.29 \\
+        Sitting Down	& \textbf{1.03}	& 1.30	&	1.21   & \textbf{1.28}	&		1.61	&	1.53 \\
+        Taking Photo	& \textbf{0.67}	& 1.31	&	1.24   & \textbf{1.01}	&	1.40	&	1.33 \\
+
+        \midrule
+        Average	&	\textbf{0.87}	&	1.51	&	1.54   & \textbf{1.19}	&	1.47	&	1.52\\
+        \bottomrule
+    \end{tabular}}
+    \label{tbl:4_2D_gt_mpjve}
+\end{table}
+
+% \begin{table}[!t]
+%     \centering
+%     \caption{Evaluation based on MPJPE and MPJVE metrics of 2D joint position on the Human3.6M dataset with the ground truth as the testing data. (Pixels)}
+%     % \resizebox{\textwidth}{!}{
+%     \begin{tabular}{l|rrr|rrr}
+%         \toprule
+%         \multirow{2}{*}{Error}  & \multicolumn{3}{c|}{\SI{400}{\milli\second}}  & \multicolumn{3}{c}{\SI{1000}{\milli\second}} \\
+%             & \textbf{Ours} & LSTM & GRU & \textbf{Ours} & LSTM & GRU \\
+%         \midrule
+%         MPJPE & \textbf{12.32} & 26.40 & 26.24 & \textbf{15.17} & 25.69 & 23.09 \\
+%         MPJVE & \textbf{0.87 }& 1.51 & 1.54 & \textbf{1.19} & 1.47 & 1.52 \\
+%         \bottomrule
+%     \end{tabular}
+%     \label{tbl:4_2D_gt}
+% \end{table}
+
+\begin{table}[!t]
+    \centering
+    \caption{Evaluation based on MPJPE and MPJVE metrics of 2D joint position on the Human3.6M dataset with the position data obtained by OpenPose as testing data. (Pixels)}
+    % \resizebox{\textwidth}{!}{
+    \begin{tabular}{l|rrr|rrr}
+        \toprule
+        \multirow{2}{*}{Error} & \multicolumn{3}{c|}{\SI{400}{\milli\second}}  & \multicolumn{3}{c}{\SI{1000}{\milli\second}} \\
+            & \textbf{Ours} & LSTM & GRU & \textbf{Ours} & LSTM & GRU \\
+        \midrule
+        MPJPE & \textbf{30.78} & 33.61 & 34.64 & 34.96 & \textbf{33.83} & 33.85 \\
+        MPJVE & \textbf{5.88 }& 12.01 & 15.70 & \textbf{7.11} & 11.82 & 15.56 \\
+        \bottomrule
+    \end{tabular}
+    \label{tbl:4_2D_OpenPose}
+\end{table}
+
+\begin{table}[!t]
+    \centering
+    \caption{Evaluation based on MPJPE of 2D joint position on the 3DPW dataset. (Pixels)}
+    % \resizebox{\textwidth}{!}{
+    \begin{tabular}{l|rrr}
+        \toprule
+        \multirow{2}{*}{Error}  & \multicolumn{3}{c}{\SI{1000}{\milli\second}} \\
+            & \textbf{Ours} & LSTM & GRU\\
+        \midrule
+        MPJPE & \textbf{156.85} & 240.94 & 236.31  \\
+        \bottomrule
+    \end{tabular}
+    \label{tbl:4_2D_3DPW}
+\end{table}
+
+
+
+\subsubsection{3D Human Motion Forecasting}\label{4:quant_2D}
+\textbf{Human3.6M Dataset}
+
+\textbf{Comparison based on MPJPE.} \textbf{Table. \ref{tbl:3D_MPJPE}} shows the comparison based on the MPJPE metric from the current related research methods. As mentioned in Section~\ref{4:loss_metric}, the MPJPE is calculated by computing the distances between the prediction result and its corresponding ground truth with respect to the key points and frames. 
+
+Thus, in the \textbf{Table. \ref{tbl:3D_MPJPE}} our method is compared with another state-of-the-art for the short and long-term prediction task. The research on 3D human motion prediction has been conducted since 2015 using the Res. Sup resulting in the MPJPE score 88.3\textit{mm} for the short-term prediction and 136.6\textit{mm} for the long-term prediction task on average. Followed by the convSeq2Seq in 2019, with a slightly better performance on average, obtaining 72.7\textit{mm} for short-term prediction tasks and 124.2\textit{mm} for the long-term prediction task. LTD-10-25, RNN-GCN, and MultiAttention obtained small improvements in the prediction results over time. Then, STS-GCN comes out with the breakthrough of the MPJPE score below 100\textit{mm}. STS-GCN obtained the average prediction over all motions with 75.6\textit{mm} and obtained the best current prediction result on the Greeting motion with an MPJPE score of 91.6\textit{mm} for the long-term prediction task. While after that, MotionMixer with MLP Based method obtained the current best prediction almost in overall motions and the average for the short and long-term prediction tasks. MotionMixer obtained the best result on average with 33.6\textit{mm} for the short-term prediction task and 71.6\textit{mm} for the long-term prediction task by MPJPE. On the other hand, our method, based on the current evaluation result of MPJPE, obtained second place for the short and long-term prediction tasks. Our method obtained an MPJPE score average of 36.4\textit{mm} for short-term prediction tasks and 73.2\textit{mm} for long-term prediction tasks. Our method achieved the best result on the Walking Dog for the short-term prediction task with 54.1\textit{mm} and the Walking Together motion with 49.9\textit{mm} for the long-term prediction task. 
+
+Even though. our method is not achieving the best result over other previous related research, the prediction results are good enough to tell the future human motion prediction for 400\textit{msec} and 1000\textit{msec} ahead. The visualization of this prediction result can be seen in Section~\ref{4:qual_evaluation}.
+
+\begin{table}
+    \centering
+    \caption{MPJPE evaluation using Human3.6M dataset for short-term and long-term 3D human motion forecasting task.}
+        \resizebox{\textwidth}{!}{\begin{tabular}{|l|cc|cc|cc|cc|cc|}
+        \toprule
+             & \multicolumn{2}{c|}{Walking} &  \multicolumn{2}{c|}{Eating}  &  \multicolumn{2}{c|}{Smoking} &  \multicolumn{2}{c|}{Discussion} &  \multicolumn{2}{c|}{Directions} \\
+             
+           \textit{Forecasting time (msec)}  & \textit{400} & \textit{1000} &  \textit{400} & \textit{1000}  &  \textit{400} & \textit{1000}  &   \textit{400} & \textit{1000}   & \textit{ 400} & \textit{1000} \\
+        \midrule
+            Res. sup~\cite{martinez2017} & 66.1 & 79.1 & 61.7 & 98.0 & 65.4 & 102.1 & 91.3 & 131.8 & 84.1 & 129.1 \\
+
+            convSeq2Seq~\cite{Li_2018} & 63.6 & 82.3 & 48.4 & 87.1 & 48.9 & 81.7 & 77.6 & 129.3 & 69.7 & 115.8 \\
+
+            LTD-10-25~\cite{Mao2019} & 44.4 & 60.9 & 38.6 & 75.8 & 39.5 & 72.1 & 68.1 & 118.5 & 58.0 & 105.5 \\
+
+            RNN-GCN~\cite{Mao2020} & 39.8 & 58.1 & 36.2 & 75.7 & 36.4 & 69.5 & 65.4 & 119.8 & 56.5 & 106.5 \\
+
+            MultiAttention~\cite{mao2021multi} & 39.0 & 57.1	& 45.2 & 73.7 & 29.0 & 68.7	& 64.0 & 117.5 & 62.6 & 105.7 \\
+        
+            STS-GCN~\cite{Sofianos2021}  & 32.9 & 51.8 &  25.4 & 52.4  &  25.8 & 50.0  & 40.2 & 78.8  &  34.7 & 71.0 \\
+
+            MotionMixer~\cite{motionmixer2022}  & \textbf{28.6} & \textbf{49.2} & \textbf{20.9} & \textbf{47.4}  & \textbf{21.4} & \textbf{45.4} & \textbf{35.5} & \textbf{78.0}  & \textbf{29.2} & \textbf{66.5} \\
+            \hline
+            Ours & 32.5 & 51.7 & 23.5 & 48.2 & 23.7 & 47.6 & 39.1 & 79.4  & 33.3 & 70.1 \\
+        \midrule
+
+        & \multicolumn{2}{c|}{Greeting} &  \multicolumn{2}{c|}{Phoning}  &  \multicolumn{2}{c|}{Posing} &  \multicolumn{2}{c|}{Purchases} &  \multicolumn{2}{c|}{Sitting} \\
+
+        \textit{Forecasting time (msec)}  & \textit{400} & \textit{1000} &  \textit{400} & \textit{1000}  &  \textit{400} & \textit{1000}  &   \textit{400} & \textit{1000}   & \textit{ 400} & \textit{1000} \\
+        \midrule
+            Res. sup~\cite{martinez2017} & 108.8 & 153.9 & 76.4 & 126.4 & 114.3 & 183.2 & 100.7 & 154.0 & 91.2 & 152.6 \\
+
+            convSeq2Seq~\cite{Li_2018} & 96.0 & 147.3 & 59.9 & 114.0 & 92.9 & 187.4 & 89.9 & 151.5 & 63.1 & 120.7 \\
+
+            LTD-10-25~\cite{Mao2019} & 82.6 & 136.8 & 50.8 & 105.1 & 79.9 & 174.8 & 78.1 & 134.9 & 58.3 & 118.7 \\
+
+            RNN-GCN~\cite{Mao2020} & 78.1 & 138.8 & 49.2 & 105.0 & 75.8 & 178.2 & 73.9 & 135.9 & 56.0 & 138.8 \\
+
+            MultiAttention~\cite{mao2021multi} & 85.4 & 136.7 &	44.1 & 104.6 & 78.7 & 172.9 & 67.9 & 133.1 & 66.3 & 115.0 \\
+        
+            STS-GCN~\cite{Sofianos2021}  & 49.2 & \textbf{91.6} &  30.9 & 66.1 & 45.6 & 106.4  & 48.7 & 93.5 &  35.0 & 75.2 \\
+
+            MotionMixer~\cite{motionmixer2022}  & \textbf{46.2} & 93.6 & \textbf{27.8} & \textbf{63.4}  & \textbf{40.1} & \textbf{99.7}  & \textbf{42.7} & \textbf{88.7}  & \textbf{29.8} & \textbf{68.9 }\\
+            \hline
+            Ours & 49.8 & 96.1 & 29.5 & 63.9 & 44.4 & 103.1 & 46.2 & 90.5 & 31.7 & 70.3 \\
+        \midrule
+
+        & \multicolumn{2}{c|}{Sitting Down} &  \multicolumn{2}{c|}{Taking Photo}  &  \multicolumn{2}{c|}{Waiting} &  \multicolumn{2}{c|}{Walking Dog} &  \multicolumn{2}{c|}{Walking Together} \\
+             
+           \textit{Forecasting time (msec)}  & \textit{400} & \textit{1000} &  \textit{400} & \textit{1000}  &  \textit{400} & \textit{1000}  &   \textit{400} & \textit{1000}   & \textit{ 400} & \textit{1000} \\
+        \midrule
+            Res. sup~\cite{martinez2017} & 112.0 & 187.4 & 87.6 & 153.9 & 87.7 & 135.4 & 110.6 & 164.5 & 67.3 & 98.2 \\
+
+            convSeq2Seq~\cite{Li_2018} & 82.7 & 150.3 & 63.6 & 128.1 & 69.7 & 117.7 & 103.3 & 162.4 & 61.2 & 87.4 \\
+
+            LTD-10-25~\cite{Mao2019} & 76.4 & 143.8 & 54.3 & 115.9 & 44.4 & 108.3 & 38.6 & 146.4 & 39.5 & 65.7 \\
+
+            RNN-GCN~\cite{Mao2020} & 72.0 & 143.6 & 51.5 & 115.9 & 54.9 & 108.2 & 86.3 & 146.9 & 41.9 & 64.9 \\
+
+            MultiAttention~\cite{mao2021multi} & 66.3 & 141.8 & 49.4 & 115.2 & 71.1 & 105.1 & 119.0 & 141.4 & 42.0 & 63.2 \\
+        
+            STS-GCN~\cite{Sofianos2021} & 47.9 & 94.3 & 33.6 & 76.9 & 35.2 & 72.0 & 59.6 & 102.6 & 30.5 & 51.1 \\
+
+            MotionMixer~\cite{motionmixer2022}  & \textbf{42.6} & \textbf{89.3} & \textbf{27.9} & \textbf{66.6}  & \textbf{30.0} & \textbf{68.2} & \textbf{54.1} & \textbf{99.6}  & \textbf{27.4} & 50.4 \\
+            \hline
+            Ours & 45.2 & 90.5 & 30.1 & 67.6  & 33.7 & 69.5 & \textbf{54.1} & 99.8 & 29.8 & \textbf{49.9 }\\
+            
+        \midrule
+        
+         & \multicolumn{2}{c|}{Average} \\
+             
+           \textit{Forecasting time (msec)}  & \textit{400} & \textit{1000} \\
+            \cline{1-3}
+            Res. sup~\cite{martinez2017}  & 88.3 & 136.6 \\ 
+            convSeq2Seq~\cite{Li_2018}  & 72.7 & 124.2 \\
+            LTD-10-25~\cite{Mao2019}  & 68.1 & 112.4 \\
+            RNN-GCN~\cite{Mao2020}  & 58.3 & 112.1 \\
+            MultiAttention~\cite{mao2021multi} & 60.0 & 110.1 \\
+            STS-GCN~\cite{Sofianos2021} & 38.3 & 75.6  \\ 
+            MotionMixer~\cite{motionmixer2022}  & \textbf{33.6 }& \textbf{71.6}  \\ 
+            \cline{1-3}
+            Ours~\cite{motionmixer2022}  & 36.4 & 73.2  \\ 
+            \cline{1-3}
+    
+        \end{tabular}}    
+    \label{tbl:3D_MPJPE}
+\end{table}
+
+\textbf{Comparison based on MAE.} \textbf{Table. \ref{tbl:3D_MAE}} shows the comparison based on the MAE metric from the current state-of-the-art methods. Our method performed quite well with the average prediction result obtained the MAE with 1.56 for the short-term prediction task, and 1.77 for the long-term prediction task. However, comparing to the other previous related methods, our method could not perform better when using the angular data. Difference between the best result obtained by the STS-GCN~\cite{Sofianos2021} is quite significant with around 0.7 MAE metric different. With this in mind, our method could predict when the coordinate data is used while in terms of the angular data, our method could not improve the prediction result from the previous related works.
+
+\begin{table}
+    \centering
+    \caption{MAE evaluation using Human3.6M dataset for short-term and long-term 3D human motion forecasting task.}
+        \begin{tabular}{|l|cc|}
+        \toprule
+             & \multicolumn{2}{c|}{Average MAE} \\
+             
+           \textit{Forecasting time (msec)}  & \textit{400} & \textit{1000} \\
+        \midrule
+            Res. sup~\cite{martinez2017} & 1.15 & - \\
+            convSeq2Seq~\cite{Li_2018} & 1.13 & 1.82 \\
+            LTD-10-25~\cite{Mao2019} & 1.04 & 1.68 \\
+            RNN-GCN~\cite{Mao2020} & 1.04 & 1.65 \\
+            MultiAttention~\cite{mao2021multi} & 0.93 & 1.57 \\
+            STS-GCN~\cite{Sofianos2021}  & 0.66 & \textbf{1.07} \\
+            MotionMixer~\cite{motionmixer2022}  & \textbf{0.63} & 1.08\\
+            TS-TSSA (Ours) & 1.56 & 1.77 \\
+        \midrule
+    
+        \end{tabular} 
+    \label{tbl:3D_MAE}
+\end{table}
+
+
+\noindent\textbf{AMASS Dataset}
+
+In this section, the author describes the evaluation of the experiment using the AMASS dataset based on the MPJPE metrics.
+Since AMASS dataset does not provide the angular data, the evaluation based on MPJPE is the only evaluation metric that could fit on this dataset. \textbf{Table.~\ref{tbl:3D_AMASS}} shows the evaluation result based on MPJPE using the AMASS dataset for the short and long-term prediction tasks. 
+\begin{table}
+    \centering
+    \caption{Evaluation based on MPJPE using AMASS dataset for short-term and long-term 3D human motion forecasting task.}
+        \begin{tabular}{|l|cc|}
+        \toprule
+             & \multicolumn{2}{c|}{Average MPJPE} \\
+             
+           \textit{Forecasting time (msec)}  & \textit{400} & \textit{1000} \\
+        \midrule
+            convSeq2Seq~\cite{Li_2018} & 67.6 & 93.5 \\
+            LTD-10-25~\cite{Mao2019} & 45.3 & 75.2 \\
+            RNN-GCN~\cite{Mao2020} & 42.0 & 67.2 \\
+            MultiAttention~\cite{mao2021multi} & 41.2 & 65.8 \\
+            STS-GCN~\cite{Sofianos2021}  & 24.5 & 45.5 \\
+            MotionMixer~\cite{motionmixer2022}  & \textbf{21.9} & \textbf{41.6}\\
+            TS-TSSA (Ours) & 46.0 & 63.7 \\
+        \midrule
+    
+        \end{tabular} 
+    \label{tbl:3D_AMASS}
+\end{table}
+
+
+\subsection{Qualitative Evaluation}\label{4:qual_evaluation}
+In this section, the author describes the evaluation based on the qualitative results.
+
+\subsubsection{2D Human Motion Forecasting}\label{4:qual_2D}
+\textbf{\figurename~\ref{fig:4_2d_long_walkings}} shows the qualitative evaluation of Walking, Walking Together, and Walking with Dog motions. Ground truth is defined by the grayscale dashed lines, while the straight blue lines define prediction. Our method could perform the 2D human motion forecasting task well with a very slight error over the pose. In addition, qualitative evaluation based on the OpenPose testing is shown in \figurename~\ref{fig:4_2d_long_walking_op}. Our method could perform well in forecasting the human body position, but it could not provide a good forecasting result on the human body pose. The OpenPose pose estimation looks rigid, which is becoming the reason for the rigid forecasting result from our method.
+\begin{figure}[!t]
+     \centering
+     \includegraphics[width=\textwidth]{./4/figures/2D_qual/walkings.png}
+     \caption{2D qualitative evaluation on Walking, Walking Together, and Walking with Dog motions respectively from top to bottom.}
+     \label{fig:4_2d_long_walkings}
+\end{figure}
+\begin{figure}[!t]
+     \centering
+     \includegraphics[width=\textwidth]{./4/figures/2D_qual/sittings.png}
+     \caption{2D qualitative evaluation on Sitting, and Sitting Down motions respectively from top to bottom.}
+     \label{fig:4_2d_long_sittings}
+\end{figure}
+\begin{figure}[!t]
+     \centering
+     \includegraphics[width=\textwidth]{./4/figures/2D_qual/walking_op.png}
+     \caption{2D qualitative evaluation on Walking motion using the data obtained by OpenPose.}
+     \label{fig:4_2d_long_walking_op}
+\end{figure}
+
+
+\subsubsection{3D Human Motion Forecasting}\label{4:qual_3D}
+\textbf{Figures.~\ref{fig:3D_long_qual_1}},\textbf{~\ref{fig:3D_long_qual_2}}, and \textbf{~\ref{fig:3D_long_qual_3}} show the long-term human motion prediction result comparing with its correspondent ground truth. The colored lines green and purple are defined as the prediction results obtained by our model, while the black and grey are defined as the corresponding ground truth. The visualization is made by generating a random frame in motion. Generally, our model could predict human motion quite well qualitatively. \textbf{Figures~\ref{fig:3d_long_takingphoto}} and\textbf{~\ref{fig:3d_long_sitting}} show the visualization of the taking photo and sitting motion. Our model failed to predict the left-hand and right-hand gestures. Despite that, the result of the phoning and greeting motions failed to be predicted in the right-leg and left-leg pose. These results aligned with the quantitative evaluation based on MPJPE when the phoning and greeting motions obtained big MPJPE values, which indicates the motion to be quite difficult to predict due to the dynamic movement over time, even though the other motions show the tendency to be predicted well.
+
+\begin{figure}
+     \centering
+     \begin{subfigure}{0.45\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{./4/figures/qualitative_hum36/Walking.png}
+         \caption{Walking}
+         \label{fig:3d_long_walking}
+     \end{subfigure}
+     % \hfill
+     \begin{subfigure}{0.45\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{./4/figures/qualitative_hum36/Eating.png}
+         \caption{Eating}
+         \label{fig:3d_long_eating}
+     \end{subfigure}
+     
+     \begin{subfigure}{0.45\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{./4/figures/qualitative_hum36/Smoking.png}
+         \caption{Smoking}
+         \label{fig:3d_long_smoking}
+     \end{subfigure}
+     \begin{subfigure}{0.45\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{./4/figures/qualitative_hum36/Discussion.png}
+         \caption{Discussion}
+         \label{fig:3d_long_discussion}
+     \end{subfigure}
+
+     \begin{subfigure}{0.45\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{./4/figures/qualitative_hum36/Direction.png}
+         \caption{Direction}
+         \label{fig:3d_long_direction}
+     \end{subfigure}
+     \begin{subfigure}{0.45\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{./4/figures/qualitative_hum36/Greeting.png}
+         \caption{Greeting}
+         \label{fig:3d_long_greeting}
+     \end{subfigure}
+    
+     \caption{Long-term prediction result by our model in Human3.6M dataset.}
+     \label{fig:3D_long_qual_1}
+\end{figure}
+
+\begin{figure}
+     \centering
+     \begin{subfigure}{0.45\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{./4/figures/qualitative_hum36/Phoning.png}
+         \caption{Phoning}
+         \label{fig:3d_long_phoning}
+     \end{subfigure}
+     % \hfill
+     \begin{subfigure}{0.45\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{./4/figures/qualitative_hum36/Posing.png}
+         \caption{Posing}
+         \label{fig:3d_long_posing}
+     \end{subfigure}
+     
+     \begin{subfigure}{0.45\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{./4/figures/qualitative_hum36/Purchases.png}
+         \caption{Purchases}
+         \label{fig:3d_long_purchases}
+     \end{subfigure}
+     \begin{subfigure}{0.45\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{./4/figures/qualitative_hum36/Sitting.png}
+         \caption{Sitting}
+         \label{fig:3d_long_sitting}
+     \end{subfigure}
+
+     \begin{subfigure}{0.45\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{./4/figures/qualitative_hum36/SittingDown.png}
+         \caption{Sitting Down}
+         \label{fig:3d_long_sittingdown}
+     \end{subfigure}
+     \begin{subfigure}{0.45\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{./4/figures/qualitative_hum36/TakingPhoto.png}
+         \caption{Taking Photo}
+         \label{fig:3d_long_takingphoto}
+     \end{subfigure}
+    
+     \caption{Long-term prediction result by our model in Human3.6M dataset.}
+     \label{fig:3D_long_qual_2}
+\end{figure}
+
+\begin{figure}
+     \centering
+     \begin{subfigure}{0.45\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{./4/figures/qualitative_hum36/Waiting.png}
+         \caption{Waiting}
+         \label{fig:3d_long_waiting}
+     \end{subfigure}
+     % \hfill
+     \begin{subfigure}{0.45\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{./4/figures/qualitative_hum36/WalkingDog.png}
+         \caption{Walking with Dog}
+         \label{fig:3d_long_walkingdog}
+     \end{subfigure}
+     
+     \begin{subfigure}{0.45\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{./4/figures/qualitative_hum36/WalkingTogether.png}
+         \caption{Walking Together}
+         \label{fig:3d_long_walkingtogether}
+     \end{subfigure}
+     
+     \caption{Long-term prediction result by our model in Human3.6M dataset.}
+     \label{fig:3D_long_qual_3}
+\end{figure}
+
+\subsection{Complexity Evaluation}
+Evaluations based on the number of parameters and floating operations FLOPs on the model are compared for the computational cost and performance. Table.\ref{tbl:4_2D_complexity} shows the comparison of the parameters and approximate FLOPs on the long-term 2D human motion forecasting task. In comparison with the RNN-based method, our method TS-TSSA obtained the best performance with nearly the same number of parameters and estimated FLOPs 121 times smaller. Meanwhile on the Table.\ref{tbl:4_3D_complexity} shows the 3D human motion forecasting task. TS-TSSA (ours) obtained around the same performance with 5 to 10 times the number of parameters compared to the STS-GCN\cite{Sofianos2021} and MotionMixer\cite{motionmixer2022}.
+
+\begin{table}[!t]
+    \centering
+    \caption{Computational complexity analysis on long-term 2D human motion forecasting.}
+        \begin{tabular}{l|ccc}
+        \toprule
+           Method  & Parameters & $\approx$ FLOPs & MPJPE \\
+        \midrule
+            LSTM & 300k & 109M & 25.69 \\
+            GRU & 230k & 82M & 23.09 \\
+            TS-TSSA (Ours) & 313k & 0.89M & 15.17 \\
+        \midrule
+    
+        \end{tabular} 
+    \label{tbl:4_2D_complexity}
+\end{table}
+
+\begin{table}[!t]
+    \centering
+    \caption{Computational complexity analysis on long-term 3D human motion forecasting.}
+        \begin{tabular}{l|ccc}
+        \toprule
+           Method  & Parameters & $\approx$ FLOPs & MPJPE \\
+        \midrule
+            
+            MultiAttention~\cite{mao2021multi} & 3.4M & - & 110.1 \\
+            MSR-GCN~\cite{msr-gcn} & 6.3M  & 192.4M & 114.2 \\
+            STS-GCN~\cite{Sofianos2021}  & 57.5k & 7.1M & 75.6 \\
+            MotionMixer~\cite{motionmixer2022}  & 30.2k & 2.1M & 71.6 \\
+            TS-TSSA (Ours) & 308.1k & 105.6M & 73.2 \\
+        \midrule
+    
+        \end{tabular} 
+    \label{tbl:4_3D_complexity}
+\end{table}
+
+
+\section{Summary}\label{4:summary}
+The objective of this research is to demonstrate the viability of 2D and 3D human motion forecasting in real-world applications. Human motion forecasting research has been conducted with quite a various methods, separating 2D and 3D input data. In this paper, Temporal-Spatial Time Series Self-Attention (TS-TSSA) is proposed to forecast human motion for short and long-term prediction tasks. As a result, TS-TSSA outperformed the RNN-based method based on the MPJPE and MPJVE evaluation metrics for the 2D forecasting task using the Human3.6M dataset and 3DPW dataset. Using the data obtained from the pose estimation method as the input data, our method did not manage to yield satisfactory predictions of the human pose. Nevertheless, it still could provide good forecasting results regarding the human body's position. This indicates that our method is applicable to real-world applications to provide human movement forecasting. 
+While for the 3D forecasting task, our method performed well based on the MPJPE evaluation metric. The results show comparable achievement to the previous related works. In conclusion, our method could be suitable for both 2D and 3D human motion forecasting tasks. The author believes that these outcomes could give more improvement on the way of using the self-attention-based approach. 
+
+%: ----------------------- paths to graphics ------------------------
+
+% change according to folder and file names
+\ifpdf
+    \graphicspath{{X/figures/PNG/}{X/figures/PDF/}{X/figures/}}
+\else
+    \graphicspath{{X/figures/EPS/}{X/figures/}}
+\fi
+
+%: ----------------------- contents from here ------------------------
+
+
+
+
+
+
+
+% ---------------------------------------------------------------------------
+%: ----------------------- end of thesis sub-document ------------------------
+% ---------------------------------------------------------------------------
+

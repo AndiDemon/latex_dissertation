@@ -1,0 +1,36 @@
+% this file is called up by thesis.tex
+% content in this file will be fed into the main document
+
+\chapter*{List of Publications} % top level followed by section, subsection
+\addcontentsline{toc}{chapter}{List of Publications}
+
+% ----------------------- paths to graphics ------------------------
+
+% change according to folder and file names
+\ifpdf
+    \graphicspath{{7/figures/PNG/}{7/figures/PDF/}{7/figures/}}
+\else
+    \graphicspath{{7/figures/EPS/}{7/figures/}}
+\fi
+
+
+% ----------------------- contents from here ------------------------
+\section*{Journals}
+\begin{enumerate}
+    \item Yunus, Andi Prademon, Nobu C. Shirai, Kento Morita, and Tetsushi Wakabayashi. ``Comparison of RNN-LSTM and Kalman Filter Based Time Series Human Motion Prediction." In Journal of Physics: Conference Series, vol. 2319, no. 1, p. 012034. IOP Publishing, 2022.
+    \item Yunus, Andi Prademon, Kento Morita, Nobu C. Shirai, and Tetsushi Wakabayashi. ``Time Series Self-Attention Approach for Human Motion Forecasting: A Baseline 2D Pose Forecasting." In Journal of Advanced Computational Intelligence and Intelligent Informatics (JACIII), Vol.27, No.3, 2023.
+\end{enumerate}
+
+
+\section*{International Conferences}
+\begin{enumerate}
+    \item Yunus, Andi Prademon, Nobu C. Shirai, Kento Morita, and Tetsushi Wakabayashi. ``Human Motion Prediction by 2D Human Pose Estimation using OpenPose." In The International Workshop on Frontiers of Computer Vision (IW-FCV) 2020, 2020. 
+    \item Yunus, Andi Prademon, Nobu C. Shirai, Kento Morita, and Tetsushi Wakabayashi. ``Time series human motion prediction using RGB camera and OpenPose." In International Symposium on Affective Science and Engineering ISASE2020, pp. 1-4. Japan Society of Kansei Engineering, 2020.
+    \item Yunus, Andi Prademon, Nobu C. Shirai, Kento Morita, and Tetsushi Wakabayashi. ``Comparison of RNN-LSTM and Kalman Filter Based Time Series Human Motion Prediction." In The 5th International Conference on Engineering Technology 2021 (ICET 2021).
+    \item Yunus, Andi Prademon, Kento Morita, Nobu C. Shirai, and Tetsushi Wakabayashi. ``Temporal-Spatial Time Series Self-Attention 2D \& 3D Human Motion Forecasting" 2023 IEEE International Conference on Industry 4.0, Artificial Intelligence, and Communications Technology (IAICT).
+    
+\end{enumerate}
+
+% ---------------------------------------------------------------------------
+% ----------------------- end of thesis sub-document ------------------------
+% ---------------------------------------------------------------------------

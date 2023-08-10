@@ -1,0 +1,240 @@
+
+% this file is called up by thesis.tex
+% content in this file will be fed into the main document
+
+%: ----------------------- introduction file header -----------------------
+\chapter{Introduction}\label{1}
+
+% the code below specifies where the figures are stored
+\ifpdf
+    \graphicspath{{1_introduction/figures/PNG/}{1_introduction/figures/PDF/}{1_introduction/figures/}}
+\else
+    \graphicspath{{1_introduction/figures/EPS/}{1_introduction/figures/}}
+\fi
+
+% ----------------------------------------------------------------------
+%: ----------------------- introduction content ----------------------- 
+% ----------------------------------------------------------------------
+
+
+
+%: ----------------------- HELP: latex document organisation
+% the commands below help you to subdivide and organise your thesis
+%    \chapter{}       = level 1, top level
+%    \section{}       = level 2
+%    \subsection{}    = level 3
+%    \subsubsection{} = level 4
+% note that everything after the percentage sign is hidden from output
+
+
+
+\section{Background}\label{1:background} % section headings are printed smaller than chapter names
+% intro
+Autonomous system utilization has become more progressive with the advancement of artificial intelligence. Many applications can be operated autonomously, such as self-driving cars and auto-pilot robots. The system's decision-making is taken autonomously by the system. Several things to consider for efficient, effective, and safe decision-making while operating the device. In the matter of the safety of the system, some devices apply depth or distance sensor\cite{sensor, ultrasonic_sensor} to keep the device at a safe distance from any object~\cite{overview-autonomous, sensor-heavyvehicle}. However, in the case of a moving object like a human, the system might get a blind spot when a human body has not reached the depth sensor measurement area but will be on the track of the device route. With this in mind, the consideration of the behavioral knowledge of the object is necessary to increase the sensitivity and tackle the lack of the blind spot in the current autonomous's safety system.
+There are several advantages of using the RGB camera for the safety system:
+\begin{enumerate}
+    \item Computer-aided system.
+    \item Wide range measurement.
+\end{enumerate}
+The other utilities that can benefit from using human motion forecasting are:
+\begin{enumerate}
+    \item Computer-aided falling down prevention for the disabled and elderly.
+    \item Additional input for the human pose estimation training as the biased data.
+    \item Additional input for the human position tracking research.
+\end{enumerate}
+
+Human motion forecasting has been retracted attention for advancing methods, strategies, and results. Several types of research, such as using recurrent neural networks, gated recurrent units (GRU), long short-term memory (LSTM), and Transformer networks, are conducted in many ways for this problem. Different approaches with different inputs and expecting different outputs in the process, which the task could be divided by the input of two-dimensional coordinates and three-dimensional coordinates. Both of these works have advantages and disadvantages in the process and precision of prediction. The two-dimensional input contains $x$ and $y$ coordinates in the frame of the image, which makes the input could be from the RGB camera that is commonly applied in many systems. As well as, the process of two-dimensional input is easier to compute, considering the input size is less than the three-dimensional input. However, in the autonomous system, the device might need to consider the $z$ coordinate to measure the real distance in the real world. As for now, the three-dimensional input is still under development, and the input is only given by the RGB camera with a depth sensor to obtain the $z$ coordinate, which makes this input still limited by the cost of the input device. Apart from the input data, human motion forecasting research has been developed along with the human pose estimation problem to support the necessity of the input. 
+
+Various Machine Learning (ML) techniques have been used to predict better results judging by the distance of prediction to the ground truth. While conducting the research, the baseline has been set to improve the prediction by one evaluation method. It was started from human motion prediction with recurrent network model\cite{fragkiadaki2015recurrent, jain2016, chiu2019}. Recent approaches have been followed with more techniques, and the renewal evaluation method to measure the distance in millimeters (\textit{mm})\cite{Sofianos2021, motionmixer2022}. These researches were conducted with the input of 3D input data and expecting the 3D output in the long-short term prediction. While for the 2D input data, some research has been conducted with various inputs of the dataset, approaches, and output\cite{mathieu2015, posetrack}. As for this research, the author considers using the most commonly applied dataset for the human motion forecasting and human pose estimation dataset, which is the Human3.6M dataset, to set the baseline of the 2D human motion forecasting and join and improve the 3D human motion forecasting research. 
+
+The author conducted several experiments to improve the prediction result with the combination of Multi-Layer Perceptron (MLP), Convolutional Neural Network (CNN), and the Transformer Network model applied in the 2D and 3D input data. Inspired by the natural language processing problem, the attention scheme shows an excellent result in understanding the context and the connection between words in sentences\cite{vaswani2017}. This attention scheme seems to be applicable in the human motion forecasting problem with some modifications on input data and models. The transformer network is also used in many applications with some modifications based on the problem. For example, the Vision Transformer is developed to do the object detection task\cite{visionTransformer, vitae, vitaev2} as well as in the time-series prediction task\cite{neo2020}. Furthermore, the author proposes several novel methods to improve human motion forecasting task performance. An overview of the contributions of our work is presented in Section 1.2.
+
+\section{Overview of Human Motion Forecasting}\label{1:overview}
+% intro
+This section provides an overview of the human motion forecasting process. There are four steps to generate the human motion prediction. These include feature preparation, learning or training the model, feature prediction, and feature-to-video interpretation. Each step is briefly introduced below.
+
+\subsection{Feature Preparation}
+Given the input generated from the device, like the RGB camera, RGB-D camera, or motion capture by the sensor. This input data must be preprocessed for the feature needed as the learning data in the next step. For example, if the sequences of images containing the human in the frame have been obtained. One needs to extract the human body feature first and get the pose in the format of joint key points. However, it depends on the expected input needed. As for this work, the author separated the research based on the input:
+\begin{enumerate}
+    \item 2D input: given the input generated from the motion capture by the distance sensor provided by the dataset for the training and testing process interpolated in the $x$ and $y$ coordinate of the frame image. While the input generated from the pose estimation result is used to evaluate the model on the biased data. Let the input be $X \in \mathbb{R}^{2 N}$ consisting of $x$ and $y$ coordinate in the $N$ human body key points.
+    
+    \item 3D input: given the input generated from the motion capture by the distance sensor provided by the dataset for the training and testing process interpolated in the $x, y$, and $z$ coordinate.  Let the input be $X \in \mathbb{R}^{3 N}$ consisting of $x, y$ and $z$ coordinate in the $N$ human body key points.
+\end{enumerate}
+
+Data preparation is done by stacking the sequence of frames in the sliding window process. This process becomes the standard method to generate the input feature to the model. Given the coordinate data $\mathbf{X} = [X_{1}, X_{2}, \ldots , X_{n}]$, where $X_{i}$ is the vector of coordinate data in the frame $i$ with respect of the key points. Further detailed descriptions of the data preparation will be explained in Section~\ref{3} and~\ref{4}.
+
+\subsection{Model Training}
+Predicting the sequence of frame vectors is the main task of the model. The model extracted important information from the training data. Thus, later it can generate the prediction from the unobserved data, expecting the next determined number of sequence frames as the output. Several methods to obtain the best model have been applied, which will be further explained in Section~\ref{2},~\ref{3}, and ~\ref{4}.
+
+\subsection{Feature Prediction}
+After training the model using the training data, the pattern of the samples has been transformed into the model to recognize. The model is expected to be able to predict the unobserved data based on the pattern that has been trained. The feature predicted by the model will be determined as a good result or not a good result depending on the evaluation method calculated by how far the distance from the prediction to the ground truth is.
+
+\subsection{Feature-to-video Interpretation}
+Since the result is in the form of the coordinate features, the visualization of the feature is needed to see how good the prediction looks in the qualitative evaluation and to realize the output in the actual video or any suitable format.
+
+\section{The Organization of This Dissertation}\label{1:organization} % section headings are printed smaller than chapter names
+% intro
+In this Section, the author describes the overall organization of this dissertation. Chapter~\ref{1} introduces the background, main problems, goals, methods in general, and how the author organized the chapters based on the task. Chapter~\ref{2} describes the research on 2D human motion forecasting by using unannotated data to realize the usability of human motion prediction in real-world applications. After realizing the usability of the human motion prediction real-world applications, Chapter~\ref{3} describes the research on the 2D human motion prediction by using annotated data from the commonly used dataset in human motion research. While human motion forecasting could be used for predicting individuals using 2D inputs like the RGB camera, which also means that it could be applied using the 3D data when the input is a certain coordinate of humans based on the motion capture devices that can measure the location with quite high precision. This brings us to Chapter~\ref{4}, which describes the research of human motion forecasting using the 3D input by the commonly used annotated dataset. Finally, the author provides the discussion and conclusion in Chapter~\ref{5}.
+
+
+\section{Motivation for the Research}\label{1:motivation} % section headings are printed smaller than chapter names
+% intro
+\subsection{Importance of Human Motion Forecasting Research}
+Human motion forecasting is the task of predicting the future movements of individuals in a given environment. Why does this task become important? In several cases, this task could greatly improve safety, efficiency, and user experience across various applications.
+\begin{enumerate}
+    
+    \item Robotics and autonomous systems: Accurately forecasting human motion enables robots and autonomous systems to interact more safely and efficiently with people in their environment.
+    \item Healthcare: Human motion forecasting can be used to assist with rehabilitation and to monitor and predict the progression of movement disorders.
+    \item Transportation: Accurately forecasting human motion can help optimize pedestrian traffic flow and improve safety in public transport systems.
+    \item Gaming and entertainment: Human motion forecasting can be used to create more realistic and immersive virtual environments.
+    \item Surveillance and security: Human motion forecasting can be used to detect and respond to potential security threats in real time.
+\end{enumerate}
+
+\subsection{Applications of Human Motion Forecasting}
+As explained in Section~\ref{1:motivation}, the task of human motion forecasting could improve the safety, efficiency, and user experience across various applications. In terms of practical uses of human motion forecasting tasks, for example:
+\begin{enumerate}
+    \item Improving the interaction between robots and humans in various settings.
+    \item Supporting physical therapy and tracking the development of movement disorders.
+    \item Streamlining pedestrian traffic flow and enhancing safety in public transportation.
+    \item Creating more believable virtual environments for gaming and entertainment.
+    \item Detecting and responding to potential security threats in real-time.
+    \item Analyzing and improving athletic performance in sports.
+    \item Enhancing the interaction between people and computer systems.
+\end{enumerate}
+
+
+\section{Scientific Contributions}\label{1:contribution} % section headings are printed smaller than chapter names
+% intro
+The author highlighted the scientific contributions of this dissertation as follows:
+\begin{enumerate}
+    \item Improved understanding of human movement: The study of human motion prediction has led to a deeper understanding of the underlying patterns and principles of human movement.
+    \item Improved human-robot interaction: Human motion prediction is crucial for improving human-robot interaction and has led to the development of new safety protocols and interaction methods.
+    \item Advances in the computer vision and machine learning method: Human motion prediction has pushed the boundaries of machine learning and computer vision by requiring algorithms to make predictions based on complex and dynamic data.
+    \item Development of the new baseline of the 2D human motion forecasting: 2D human motion forecasting using commonly used annotated datasets and commonly used evaluation metrics could help set the baseline for the related works to follow.
+    \item Advances in the deep learning application of the attention-based method to understand the human motion prediction task, which also could help the other research to use the same model's structure in another task.
+\end{enumerate}
+
+\section{Summary of the Introduction}\label{1:summary} 
+In this chapter, the author introduces the basic knowledge needed to understand the human motion forecasting task. The background, main problems, goals, methods, and expected outcomes are explained explicitly. While the following chapters describe more in detail.
+The author has given examples of the applications, and the importance of the human motion forecasting research described in Section~\ref{1:motivation} as well as the detail of the contributions of our work have been described in Section~\ref{1:contribution}.
+
+
+
+
+% There are several applications that can be utilized by knowing human motion forecasting. For example, human motion prediction can help the human motion tracking model for better accuracy. It can be used in the locomotive syndrome disorder evaluation and prevent humans from falling down.
+
+% \subsection{Name your subsection} % subsection headings are again smaller than section names
+% % lead
+% Different organized systems have different energy currencies. The machines that enable us to do science like sizzling electricity but at a controlled voltage. Earth's living beings are no different, except that they have developed another preference. They thrive on various chemicals. 
+
+% % dextran, starch, glycogen
+% Most organisms use polymers of glucose units for energy storage and differ only slightly in the way they link together monomers to sometimes gigantic macromolecules. Dextran of bacteria is made from long chains of $\alpha$-1,6-linked glucose units. 
+
+% %: ----------------------- HELP: special characters
+% % above you can see how special characters are coded; e.g. $\alpha$
+% % below are the most frequently used codes:
+% %$\alpha$  $\beta$  $\gamma$  $\delta$
+
+% %$^{chars to be superscripted}$  OR $^x$ (for a single character)
+% %$_{chars to be suberscripted}$  OR $_x$
+
+% %>  $>$  greater,  <  $<$  less
+% %≥  $\ge$  greater than or equal, ≤  $\ge$  lesser than or equal
+% %~  $\sim$  similar to
+
+% %$^{\circ}$C   ° as in degree C
+% %±  \pm     plus/minus sign
+
+% %$\AA$     produces  Å (Angstrom)
+
+
+
+
+% % dextran, starch, glycogen continued
+% Starch of plants and glycogen of animals consists of $\alpha$-1,4-glycosidic glucose polymers \cite{fragkiadaki2015recurrent}. See figure \ref{largepotato} for a comparison of glucose polymer structure and chemistry\cite{martinez2017}. 
+
+% Two references can be placed separated by a comma ~\cite{martinez2017, jain2016}.
+
+% %: ----------------------- HELP: references
+% % References can be links to figures, tables, sections, or references.
+% % For figures, tables, and text you define the target of the link with \label{XYZ}. Then you call cross-link with the command \ref{XYZ}, as above
+% % Citations are bound in a very similar way with \cite{XYZ}. You store your references in a BibTex file with a programme like BibDesk.
+
+
+
+
+
+% \figuremacro{largepotato}{A common glucose polymers}{The figure shows starch granules in potato cells, taken from \href{http://molecularexpressions.com/micro/gallery/burgersnfries/burgersnfries4.html}{Molecular Expressions}.}
+
+% %: ----------------------- HELP: adding figures with macros
+% % This template provides a very convenient way to add figures with minimal code.
+% % \figuremacro{1}{2}{3}{4} calls up a series of commands formating your image.
+% % 1 = name of the file without extension; PNG, JPEG is ok; GIF doesn't work
+% % 2 = title of the figure AND the name of the label for cross-linking
+% % 3 = caption text for the figure
+
+% %: ----------------------- HELP: www links
+% % You can also see above how, www links are placed
+% % \href{http://www.something.net}{link text}
+
+% \figuremacroW{largepotato}{Title}{Caption}{0.8}
+% % variation of the above macro with a width setting
+% % \figuremacroW{1}{2}{3}{4}
+% % 1-3 as above
+% % 4 = size relative to text width which is 1; use this to reduce figures
+
+
+
+
+% Insulin stimulates the following processes:
+
+% \begin{itemize}
+% \item muscle and fat cells remove glucose from the blood,
+% \item cells breakdown glucose via glycolysis and the citrate cycle, storing its energy in the form of ATP,
+% \item liver and muscle store glucose as glycogen as a short-term energy reserve,
+% \item adipose tissue stores glucose as fat for long-term energy reserve, and
+% \item cells use glucose for protein synthesis.
+% \end{itemize}
+
+% %: ----------------------- HELP: lists
+% % This is how you generate lists in LaTeX.
+% % If you replace {itemize} by {enumerate} you get a numbered list.
+
+
+ 
+
+
+% %: ----------------------- HELP: tables
+% % Directly coding tables in latex is tiresome. See below.
+% % I would recommend using a converter macro that allows you to make the table in Excel and convert them into latex code which you can then paste into your doc.
+% % This is the link: http://www.softpedia.com/get/Office-tools/Other-Office-Tools/Excel2Latex.shtml
+% % It's a Excel template file containing a macro for the conversion.
+
+% \begin{table}[htp]
+% \centering
+% \begin{tabular}{ccc} % ccc means 3 columns, all centered; alternatives are l, r
+
+% {\bf Gene} & {\bf GeneID} & {\bf Length} \\ 
+% % & denotes the end of a cell/column, \\ changes to next table row
+% \hline % draws a line under the column headers
+
+% human latexin & 1234 & 14.9 kbps \\
+% mouse latexin & 2345 & 10.1 kbps \\
+% rat latexin   & 3456 & 9.6 kbps \\
+% % Watch out. Every line must have 3 columns = 2x &. 
+% % Otherwise you will get an error.
+
+% \end{tabular}
+% \caption[title of table]{\textbf{title of table} - Overview of latexin genes.}
+% % You only need to write the title twice if you don't want it to appear in bold in the list of tables.
+% \label{latexin_genes} % label for cross-links with \ref{latexin_genes}
+% \end{table}
+
+% % There you go. You already know the most important things.
+
+
+% ----------------------------------------------------------------------
+
+
+
+

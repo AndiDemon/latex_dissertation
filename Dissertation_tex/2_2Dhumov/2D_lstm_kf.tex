@@ -1,0 +1,284 @@
+% this file is called up by thesis.tex
+% content in this file will be fed into the main document
+
+\chapter{RNN-LSTM and Kalman Filter Based Time Series 2D Human Motion Forecasting}\label{2} % top level followed by section, subsection
+
+% ----------------------- contents from here ------------------------
+
+\section{Introduction}\label{2:intro}
+While machines were developed to coexist and help the work of a human, a system that considers the behavior of the surroundings for the device is needed. For the example of the system in human interaction, humans constantly interact with their surroundings along with other living things and nonliving things. Many researchers and companies have developed this sensing system for many uses, such as the distancing sensor to measure the distance in the auto-braking system for the car's safety system. 
+However, the system will detect everything at a certain distance as a threat using the distance sensor without considering the object. Compared to a camera, distance sensors are more expensive. And one more reason for users to use the camera is that the development can still go further on distinguishing objects. 
+
+This research aims to develop a system that recognizes the environment's behavior in the next 1-second movement. As for the first step, the system determines the human body as an object. Then, by predicting the human action, which has a problematic pattern to be recognized, the system will understand where the human will move, giving another delay time for the system to do the action. For these reasons, the scope of human motion has been limited by only using simple human motions like hand gestures and walking movements.
+
+For a more reliable dataset, some researchers use the RGB-D camera, like Kinect, to estimate the human body pose~\cite{martinez2017, tang2018long}. Nonetheless, this paper uses the RGB camera since it has been commonly used recently in any aspect of life. The main objective of this research is to predict the motion of the
+human pose, focusing on the data obtained from the RGB camera and preprocessed by the pose estimation method. In this research, we rely on OpenPose to estimate the human body pose. However, the data that OpenPose has preprocessed did not consistently generate the precise estimation of human body parts, shown in \textbf{Fig.~\ref{fig:2_openpose_miss}}. With this in mind, the data needs to be prepared to be the input of the prediction method. We determine the estimation failure by the OpenPose as the unstable data as the challenge in this paper. Related research has been conducted to predict human motion with the RGB camera focusing on sports activities like boxing, karate, or taekwondo. The result shows 0.5 seconds prediction of human movement has been obtained. Nonetheless, the accuracy of the forecast was not found in this paper~\cite{wu2018real}.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.6\textwidth]{./2_2Dhumov/figures/2_OpenPose_miss.pdf}
+    \caption{Pose Estimation: OpenPose failed to estimate the full body human pose key points.}
+    \label{fig:2_openpose_miss}
+\end{figure}
+
+Recently, Recurrent Neural Network (RNN) has been used to deal with the specific problem for prediction, inclusively the difficulty of predicting human motion~\cite{martinez2017, graves2013generating, che2018recurrent}. Because the individual behavior of humans is varied and unique, a short-term and long-term prediction method is compulsory to clear up the forecasting problem. Recurrent Neural Network Long Short Term Memory (RNN-LSTM) implements the short-term and long-term prediction method based on its extended memory to store the weight of parameters with reliable certainty of prediction results~\cite{akita2016deep, hochreiter1997long}.
+While Kalman Filter has been used as the prediction method that is reliable enough based on the result from the time-series data~\cite{singh2021kalman}, realizing the human motion prediction using RNN-LSTM and Kalman Filter and comparing the result to show the performance on the unstable data like human motion is the main idea of this study. This research has been updated with more data and evaluation methods from the previous experiment~\cite{yunus2020time}.
+
+\begin{figure}
+    \centering
+    \begin{subfigure}[t]{0.45\textwidth}
+        \centering
+        \includegraphics[height=1.5in]{./2_2Dhumov/figures/2_our_1.pdf}
+        \caption{Sample 1}
+        \label{fig:2_ourdataset_1}
+    \end{subfigure}
+    \begin{subfigure}[t]{0.45\textwidth}
+        \centering
+        \includegraphics[height=1.5in]{./2_2Dhumov/figures/2_our_2.pdf}
+        \caption{Sample 2}
+        \label{fig:2_ourdataset_2}
+    \end{subfigure}
+    \begin{subfigure}[t]{0.5\textwidth}
+        \centering
+        \includegraphics[height=1.7in]{./2_2Dhumov/figures/2_our_3.pdf}
+        \caption{Sample 3}
+        \label{fig:2_ourdataset_3}
+    \end{subfigure}
+    \caption{Our dataset samples}
+    \label{fig:2_ourdataset}
+\end{figure}
+
+
+\section{Preliminaries}\label{2:prelim}
+In this section, the author describes the tools, terminologies, and methods used in this research.
+
+\subsection{Dataset}\label{2:prelim_dataset}
+COCO dataset key points have been used to generate 18 key points of the human body pose in the frame~\cite{Cao2017, kruusamaehuman}. The COCO dataset is used as training data in feature extraction to detect the key points of the human body in our dataset and CMU dataset. As the first step of the prediction, simple human motion and gestures are needed, such as hand gestures and simple walking. Our dataset is consisting 30 fps (frame per second) videos with a frame dimension of 960 × 540 pixels, as shown in \textbf{Fig.~\ref{fig:2_ourdataset}}. The CMU dataset has been used as a step forward to a more complex motion as a comparison for our dataset. This CMU dataset consists of 2605 videos with 30 fps and 352 × 240 pixels frame dimension, as shown in \textbf{Fig.~\ref{fig:2_cmudataset}}.
+
+\begin{figure}
+    \centering
+    \begin{subfigure}[t]{0.45\textwidth}
+        \centering
+        \includegraphics[height=1.5in]{./2_2Dhumov/figures/2_cmu_1.pdf}
+        \caption{Sample 1}
+        \label{fig:2_cmudataset_1}
+    \end{subfigure}
+    \begin{subfigure}[t]{0.45\textwidth}
+        \centering
+        \includegraphics[height=1.5in]{./2_2Dhumov/figures/2_cmu_2.pdf}
+        \caption{Sample 2}
+        \label{fig:2_cmudataset_2}
+    \end{subfigure}
+    \begin{subfigure}[t]{0.5\textwidth}
+        \centering
+        \includegraphics[height=1.7in]{./2_2Dhumov/figures/2_cmu_3.pdf}
+        \caption{Sample 3}
+        \label{fig:2_cmudataset_3}
+    \end{subfigure}
+    \caption{CMU dataset samples}
+    \label{fig:2_cmudataset}
+\end{figure}
+
+\subsection{YOLOv3}\label{2:prelim_yolo}
+You only look once (YOLO) is an object detection system targeted for real-time processing. Fast YOLO is the fastest general-purpose object detector in the literature, and YOLO pushes the state-of-the-art in real-time object detection. YOLO also generalizes well to new domains making it ideal for applications that rely on fast, robust object detection~\cite{redmon2016you}.
+
+\subsection{Pose Estimation: OpenPose}\label{2:prelim_openpose}
+For the 2D real-time multi-person keypoint detection, OpenPose provides 15 or 18, or 25 body/foot key points estimation based on the dataset key points. OpenPose generates 25 joints of the human body with BODY25 joints detection from the RGB image~\cite{Cao2017}.
+The features obtained from OpenPose are not as precise as the manually annotated data. With OpenPose as the pose estimation method, one can predict human motion without key point annotations in the frames. Considering the practical applications, a pose estimator such as OpenPose is needed to make it possible for a method to directly predict key points from image data without key point annotations.
+
+\subsection{Kalman Filter}\label{2:prelim_kalmanfilter}
+Kalman Filter is an adequate iterative filter that estimates the internal state of a linear dynamic system from a series of noisy measurements~\cite{kalmanfilter}. Kalman Filter has been used in some applications for short-term forecasting~\cite{singh2021kalman}. Kalman Filter is based on two primary functions. The first step is the prediction step. The first guess is generated about what we think is valid and the certainty that the estimation is correct. After that, Kalman Filter generates a different estimate with a weighted average calculation. Then, the new guess is generated by the previous guess, which the weighted average has corrected, and these steps are iteratively calculated.
+
+\subsection{Recurrent Neural Network}\label{2:prelim_rnn}
+Recurrent Neural Network is one of the classes in the neural network where the connections on the units create a structure along with the temporal sequence. RNN has the internal memory to process the series of data inputs. The computing units in the RNN have a time-varying real-valued activation and adjustable weight. RNNs are created by recursively applying the same weights over a graph-like structure~\cite{rnn}. The learned model in RNN has the exact input size since it transitions from one state to another.
+
+\subsection{Long Short-Term Memory}\label{2:prelim_lstm}
+The short-term data could be stored based on the RNN's internal memory that stores the weights and computations of the data. However, RNN cannot keep the series of data in the longer term to be predicted. Here, LSTM performs the role of the extended form of RNN, which contains the extended memory by structure. Hochreiter and Schmidhuber invented LSTM in 1997, which works and can handle signals that mix low and high-frequency components~\cite{hochreiter1997long}.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.6\textwidth]{./2_2Dhumov/figures/2_method_overview.pdf}
+    \caption{Proposed method overview}
+    \label{fig:2_method_overview}
+\end{figure}
+
+\section{Proposed Method}\label{2:proposedmethod}
+One second of the human motion forecast is the goal of this research. First, the human body pose is defined by parts covering the head, neck, shoulders, elbows, wrists, hips, knees, and ankles as the coordinate data of the features. Then, this coordinate data will be converted to the movement data containing the distance and direction based on the body parts of the frame. Finally, the movement data will be processed using the RNN-LSTM and Kalman Filter to predict.
+
+\begin{figure}
+    \centering
+    \begin{subfigure}[t]{0.45\textwidth}
+        \centering
+        \includegraphics[height=1.5in]{./2_2Dhumov/figures/our_yolo.pdf}
+        \caption{YOLOv3 is applied on the Our dataset.}
+        \label{fig:2_ouryolo}
+    \end{subfigure}
+    \begin{subfigure}[t]{0.45\textwidth}
+        \centering
+        \includegraphics[height=1.5in]{./2_2Dhumov/figures/our_openpose.pdf}
+        \caption{OpenPose is applied on the Our dataset after the YOLOv3 crop.}
+        \label{fig:2_ouropenpose}
+    \end{subfigure}
+    \begin{subfigure}[t]{0.5\textwidth}
+        \centering
+        \includegraphics[height=1.7in]{./2_2Dhumov/figures/our_yolo_openpose.pdf}
+        \caption{Our dataset sample after YOLOv3 and OpenPose features extraction.}
+        \label{fig:2_ouryoloopenpose}
+    \end{subfigure}
+    \caption{Our dataset features extraction process}
+    \label{fig:2_our_feature_extract}
+\end{figure}
+
+
+\subsection{Feature Extraction}\label{2:proposed_featureextract}
+The feature is one key factor in obtaining the prediction as the data that will be calculated are from this step. The OpenPose from OpenCV implements the state-of-the-art method to estimate the human body pose with an RGB camera. The key points will detail the coordinate data used in the prediction method based on the COCO dataset. Nonetheless, the results obtained by OpenPose are not constantly stable, as shown in \textbf{Fig.~\ref{fig:2_openpose_miss}}. In this paper, the problem of the estimation failure by OpenPose is solved by narrowing the frame input for OpenPose by using YOLOv3. YOLOv3 detects the object of the human body in the frame, as shown in \textbf{Fig.~\ref{fig:2_cmuyolo}} and \textbf{ \ref{fig:2_ouryolo}}. With this cropping limitation, the pose estimation is only focused on the human body frame as shown in \textbf{Fig.~\ref{fig:2_cmuopenpose}} and \textbf{ \ref{fig:2_ouropenpose}}.
+
+\begin{figure}
+    \centering
+    \begin{subfigure}[t]{0.45\textwidth}
+        \centering
+        \includegraphics[height=1.5in]{./2_2Dhumov/figures/cmu_yolo.pdf}
+        \caption{YOLOv3 is applied on the CMU dataset.}
+        \label{fig:2_cmuyolo}
+    \end{subfigure}
+    \begin{subfigure}[t]{0.45\textwidth}
+        \centering
+        \includegraphics[height=1.5in]{./2_2Dhumov/figures/cmu_openpose.pdf}
+        \caption{OpenPose is applied on the CMU dataset after the YOLOv3 crop.}
+        \label{fig:2_cmuopenpose}
+    \end{subfigure}
+    \begin{subfigure}[t]{0.5\textwidth}
+        \centering
+        \includegraphics[height=1.7in]{./2_2Dhumov/figures/cmu_yolo_openpose.pdf}
+        \caption{CMU dataset sample after YOLOv3 and OpenPose features extraction.}
+        \label{fig:2_cmuyoloopenpose}
+    \end{subfigure}
+    \caption{CMU dataset features extraction process}
+    \label{fig:2_cmu_feature_extract}
+\end{figure}
+
+Given the coordinate data $x$ and $y$ based on the result of the pose estimation by OpenPose, the obtained raw $x$ and $y$ coordinate values are not suitable for motion estimation using our estimation model because their value range depends on the image size. Equations~\ref{eq:feature_distance} and~\ref{eq:feature_direction} convert the obtained coordinate value at $i$-th frame $x_i$ and $y_i$ to the movement data expression that consists of distance $d_i$ and direction $\theta_{i}$.
+\begin{equation}\label{eq:feature_distance}
+    d_i = \sqrt{( x_i - x_{i-fs})^2 + ( y_i - y_{i-fs} )^2 }
+\end{equation}
+\begin{equation}\label{eq:feature_direction}
+    \theta_i = \mathrm{arcsin} \left( \frac{y_i - y_{i-fs}}{d_i} \right)
+\end{equation}
+where $fs$ is the constant value of the frame step of 30.
+
+\subsection{Pose Prediction Using Kalman Filter}\label{2:proposed_kalmanfilter}
+Kalman Filter consists of the estimate function and the correction update function. This research defines Kalman Filter in two parts to calculate the movement data distance and direction separately using Equations~\ref{eq:kf_distance} and \ref{eq:kf_direction}. 
+\begin{equation}\label{eq:kf_distance}
+    d_i = d_{i-1} + \frac{(\sigma_i \times d_{i-1}) + (\sigma_c \times \delta_i)} {\sigma_i \times \sigma_c}
+\end{equation}
+\begin{equation}\label{eq:kf_direction}
+    \theta_i = \theta_{i-1} + \frac{(\sigma_i \times \theta_{i-1}) + (\sigma_c \times \delta_i)} {\sigma_i \times \sigma_c}
+\end{equation}
+
+where $\sigma_i$ is the initial weight and an updated weight of $d_i, \sigma_c$ refers to the constant noise weight, $\delta_i$ is the data obtained by OpenPose.
+
+\subsection{Pose Prediction Using RNN-LSTM}\label{2:proposed_lstm}
+Pose prediction by Kalman Filter could fail to estimate the sudden move, which is why we propose RNN-LSTM as a comparison to predict human motion. Three stacked hidden layers of RNN-LSTM are used as the learning model to process the input of 14 key points of human body parts. Likewise, other related research used three stacked-layer of RNN-LSTM~\cite{martinez2017, tang2018long, wu2018real}. The loss function is defined by the Mean Squared Error (MSE) to calculate the loss value in the training process of RNN-LSTM.
+
+\begin{equation}\label{eq:MSE}
+    L_\mathrm{MSE} = \frac{1}{n}\sum^n_{i=1} (\hat{x} - x_i)
+\end{equation}
+
+\subsection{Evaluation Method}\label{2:evaluationmethod}
+The experiments have been performed by comparing the CMU dataset and our dataset using the Kalman Filter and RNN-LSTM. To evaluate the accuracy of the prediction, the euclidean distance between two nodes from different frames is calculated to compare the lengths from the ground truth to the predicted result~\cite{singh2021kalman}.
+
+\begin{equation}\label{eq:2evaluation}
+    E = \sqrt{(x_{i+30} - x_p)^2 + (y_{i+30} - y_p)^2}
+\end{equation}
+
+Where $i$ refers to the number of the frame, $x_i$ and $y_i$ are the $x$ and $y$ coordinate data at $i$-th frame. The $x_p$ and $y_p$ are the coordinates of x and y of the prediction result, calculated by $d_i$ and $\theta_i$, movement data at the $i$-th frame, as shown in Equations \ref{eq:2_xp} and \ref{eq:2_yp}.
+
+\begin{equation}\label{eq:2_xp}
+    x_p = x_i + d_i   
+\end{equation}
+\begin{equation}\label{eq:2_yp}
+    y_p = y_i + d_i   
+\end{equation}
+
+As for the evaluation of the satisfiable prediction, $E_p$ determines the evaluation based on the percentage of the limitation satisfiable range in a frame by:
+\begin{equation}\label{eq:2_range_limit}
+    E_p = \frac{N_s}{N} \times 100
+\end{equation}
+$N_s$ represents the number of the prediction results below the satisfiable range, and $N$ represents the total frame.
+
+\section{Experiment Results}\label{2:results}
+\textbf{Figures~\ref{fig:2_our_rnn}} and \textbf{\ref{fig:2_our_kf}} shows the prediction results on our dataset. The red nodes are the actual position of the key points, and the blue nodes are the forecast position of the key points. While figure 6 shows the prediction results for the CMU dataset. \textbf{Table.~\ref{tbl:2_evaluation_result}} shows the average evaluation distances by the percentage of successful prediction, error average, and error median for RNN-LSTM and Kalman Filter on our and CMU datasets.
+
+\begin{figure}
+    \centering
+    \begin{subfigure}[t]{0.45\textwidth}
+        \centering
+        \includegraphics[height=2.0in]{./2_2Dhumov/figures/our_rnn.pdf}
+        \caption{Our dataset with RNN-LSTM}
+        \label{fig:2_our_rnn}
+    \end{subfigure}
+    \begin{subfigure}[t]{0.45\textwidth}
+        \centering
+        \includegraphics[height=2.0in]{./2_2Dhumov/figures/our_kf.pdf}
+        \caption{Our dataset with Kalman Filter}
+        \label{fig:2_our_kf}
+    \end{subfigure}
+    \begin{subfigure}[t]{0.45\textwidth}
+        \centering
+        \includegraphics[height=2.0in]{./2_2Dhumov/figures/cmu_rnn.pdf}
+        \caption{CMU dataset with RNN-LSTM}
+        \label{fig:2_cmu_rnn}
+    \end{subfigure}
+    \begin{subfigure}[t]{0.45\textwidth}
+        \centering
+        \includegraphics[height=2.0in]{./2_2Dhumov/figures/cmu_kf.pdf}
+        \caption{CMU dataset with Kalman Filter}
+        \label{fig:2_cmu_kf}
+    \end{subfigure}
+    \caption{Prediction results on Our dataset and CMU dataset using RNN-LSTM and Kalman Filter. Red nodes define the current position, and blue nodes define the prediction obtained by the corresponding methods.}
+    \label{fig:2_qualitative_results}
+\end{figure}
+
+Generally, Kalman Filter shows better results than RNN-LSTM on the predicted key points, with 93.2\% of the predictions in the distance range of successful prediction.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=\textwidth]{./2_2Dhumov/figures/2_evaluation_percentage.pdf}
+    \caption{Evaluation distance percentage lower than 1.8\% of the diagonal frame length in pixels.}
+    \label{fig:2_evaluation_percentage}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=\textwidth]{./2_2Dhumov/figures/2_kf_percentage.pdf}
+    \caption{Evaluation of predicted results obtained from Kalman Filter prediction result by each node and motions based on the percentage of the value lower than 1.8\%.}
+    \label{fig:2_kf_percentage}
+\end{figure}
+
+Kalman filter shows a closer error average and error median, which indicates that the results that the Kalman Filter has obtained are generally more comparable to the ground truth but not in the distance range of the successful prediction. However, when we see the result distribution from \textbf{Fig.~\ref{fig:2_evaluation_percentage}}, which shows the percentage of successful prediction from accumulative frames in every key point to compare the method and dataset result, RNN-LSTM shows better results on knees and ankles on our dataset. At the same time, the other prediction results are various. For example, RNN-LSTM shows complications in remembering the data on the elbow and wrist key points since these key points are the parts of the human body that move more than others. \textbf{Fig.~\ref{fig:2_kf_percentage}} shows the evaluation result based on the satisfiable result percentage on all frames based on the movement comparison by Kalman Filter, where the prediction result distribution on the moving to the right side motion is satisfiable with the most negligible value of 97\% of the predictions are in the range of the correct prediction. However, in the movement of hand gesture + moving to the left on hips, knees, and ankles nodes, the prediction distribution result shows none of the results are in the range of the correct prediction. While the other motion, the prediction results are varied, with the most negligible value of 80\% of the projections in the accurate forecast except for the ankles and knees are varied around 60\% of the prediction results are in the range of the correct prediction.
+
+\begin{table}
+    \centering
+    \caption{Evaluation of the experiment results by RNN-LSTM and Kalman FIlter on Our dataset and CMU dataset.}
+    \begin{tabular}{|l|c|p{0.15\textwidth}|p{0.2\textwidth}|p{0.2\textwidth}|}
+    \toprule
+         \textbf{Method} & \textbf{Dataset} & \textbf{Succesful Prediction (\%)} & \textbf{Error Average (pixels)} & \textbf{Error Median (pixels)} \\
+    \midrule
+         \multirow{2}{*}{RNN-LSTM} & Ours & 75.4 $\pm$ 24.9 & 33.4 $\pm$ 9.9 & 17.6 $\pm$ 18.0 \\
+         & CMU & 52.3 $\pm$ 18.7 & 32.4 $\pm$ 11.4 & 7.2 $\pm$ 5.4 \\
+
+         \multirow{2}{*}{\textbf{Kalman Filter}} & Ours & \textbf{93.2 $\pm$ 5.6} & 7.7 $\pm$ 2.3 & 5.6 $\pm$ 1.2 \\
+         & CMU & 77.1 $\pm$ 6.0 & \textbf{5.2 $\pm$ 0.8} & \textbf{3.8 $\pm$ 0.8} \\
+         
+    \bottomrule     
+    \end{tabular}
+    
+    \label{tbl:2_evaluation_result}
+\end{table}
+
+\section{Summary}\label{2:summary}
+We have proposed a system to predict human motion with Kalman Filter and RNN-LSTM using an RGB camera for one second forward. The actions of hand gestures, sideways movement, and simple walking are included in the sample video. Based on the prediction result, most of the predicted key points are close to the ground truth. The validity of the RGB-based method in the simple human motion study has been confirmed. These results concluded that this is an essential step to comprehending a more advanced method for more complex human motion. As for future works, the data has to be normalized since it has spike movement from the feature extraction method, making the prediction method challenging to predict. 
+
+% ---------------------------------------------------------------------------
+% ----------------------- end of thesis sub-document ------------------------
+% ---------------------------------------------------------------------------

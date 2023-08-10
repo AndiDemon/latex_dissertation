@@ -1,0 +1,20 @@
+
+% Thesis Abstract -----------------------------------------------------
+
+
+% \begin{abstractslong}    %uncommenting this line, gives a different abstract heading
+\begin{abstracts}        %this creates the heading for the abstract page
+
+Human motion forecasting is a necessary variable to analyze human motion concerning the safety system of the autonomous system that could be used in many applications, such as in auto-driving vehicles, auto-pilot logistics delivery, and gait analysis in the medical field. At the same time, many types of research have been conducted on 2D and 3D human motion prediction for short and long-term goals. In this dissertation, human motion forecasting in the 2D plane has been conducted as a reliable alternative in motion capture of the RGB camera attached to the devices. While for a more precise location in the real-world automation application, 3D human motion forecasting is also necessary since the device could detect the exact location in the 3D plane. The unannotated dataset is used as the samples to conduct the works on 2D human motion forecasting to realize the usability of the task in real-world applications. On the unannotated dataset prediction task, the author proposed the feature extraction by OpenPose as the commonly used pose estimator and then obtained the future prediction movement by the RNN-LSTM or Kalman Filter. As a result, the usability of human motion prediction by applying the RGB camera is confirmed. The prediction results obtained by the Kalman Filter show better performance than the RNN-LSTM based on the correct prediction result within the correct location range.
+
+In contrast, the annotated dataset is used to improve the quality and performance of the prediction results obtained by the models. The author proposed a method, the time series self-attention approach to generate the next future human motion in the short-term of 400 milliseconds and long-term of 1000 milliseconds, resulting that the model could predict human motion with a slight error of 23.51 pixels for short-term prediction and 10.3 pixels for long-term prediction on average compared to the ground truth in the quantitative and qualitative evaluation. Our method outperformed the LSTM and GRU models on the Human3.6M dataset based on the MPJPE and MPJVE metrics. The average loss of correct key points varied based on the tolerance value. Our method performed better within the 50 pixels tolerance. In addition, our method is tested by images without key point annotations using OpenPose as the pose estimation method. As a result, our method could predict well the position of the human but could not predict well for the human body pose. This research is a new baseline for the 2D human motion prediction using the Human3.6M dataset.
+
+Subsequently, studies were carried out to predict human motion in 3D, aiming to improve various applications. Building upon the groundwork established by previous studies, the time series self-attention method was utilized as the model with modifications to accommodate 3D input data. As a result, our approach showed good performance in both short and long-term prediction tasks. It had an average error of 36.4\textit{mm} between the prediction and ground truth in short-term predictions and 73.2\textit{mm} in long-term predictions.
+
+Overall, the studies of human motion forecasting have been conducted based on 2D and 3D input. In this study, we confirmed the realization of our method to predict human motion in the short and long term.
+
+\end{abstracts}
+% \end{abstractslong}
+
+
+% ---------------------------------------------------------------------- 

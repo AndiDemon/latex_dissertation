@@ -1,0 +1,37 @@
+% this file is called up by thesis.tex
+% content in this file will be fed into the main document
+
+%: ----------------------- name of chapter  -------------------------
+\chapter{Conclusion}\label{5} % top level followed by section, subsection
+Autonomous systems have been developed for various applications. However, for safety, these systems must consider the movement of objects around them. This is where human motion prediction comes into play, as it helps to prevent accidents, both for others and for the autonomous devices themselves. For example, self-driving cars can use human motion prediction to anticipate and respond to human behavior, robots can use it to interact more effectively with humans, and devices designed to support the elderly can use it to prevent falls. Many more potential applications could benefit from human motion prediction.  With this in mind, the author proposes steps of research to realize human motion prediction in real-world applications.
+
+In the second chapter, the author proposed a method to predict human motion using the unannotated data obtained from the commonly used method to generate the human body pose. The 2D pose estimation: OpenPose is used to generate the human body pose in real-time, then the RNN-LSTM and Kalman Filter are used to generate the future human motion for one second ahead. As a result, this research confirmed the usability of 2D human motion prediction in real-world applications. 
+
+In the third chapter, the author proposed the improvement of the 2D human motion prediction by using the annotated data and the novel proposed method. The Human3.6M and 3DPW datasets are used as the main dataset to be compared with the other state-of-the-art methods. The author proposed the Time Series Self-Attention method as the model to predict human motion for the short and long term. As a result, our proposed method outperformed the RNN-LSTM and RNN-GRU in the short and long-term prediction task using the Human3.6M dataset. However, when using the 3DPW dataset, our method, as well as the RNN-based method, could not perform well due to the varied uncategorized data in the 3DPW dataset. In addition to the usability confirmation, the author added the evaluation using the data obtained by the pose estimation method. As a result, our method could perform very well in predicting the human location but could not predict well regarding the human pose. In conclusion, this research could provide improvement of the 2D human motion prediction and could be used as the baseline to be compared with other works in the future.
+
+The technologies to obtain a more precise location of the human pose are growing. The more specific data that could be obtained means the more complex process of generating the human motion prediction. Due to this reason, in the fourth chapter, the author applied the Time Series Self-Attention method in the 3D human motion forecasting task. Since this research has been developed by many other previous works, our proposed method could be compared with other related research with respect to the dataset, the configuration of the data, and the evaluation metric. As a result, our method could predict well the human pose using the Human3.6M and reach the 2nd world best position based on the MPJPE evaluation metric for the short and long-term prediction task. However, our method could not predict well when using the angular data in which the MAE evaluation metric takes place. By using AMASS dataset, our method could perform well in predicting human motion, but the results are not quite competitive compared to the other previous methods.
+
+In conclusion, the author performed the study on 2D and 3D human motion prediction. the author confirmed the usability and performance of the proposed method in both 2D and 3D human motion prediction for the short and long term. The self-attention-based method is applicable for time-series tasks such as human motion prediction, which could lead to future works for more applications of deep learning, such as the classification task, object recognition, and many more applications.
+
+
+%: ----------------------- paths to graphics ------------------------
+
+% change according to folder and file names
+\ifpdf
+    \graphicspath{{X/figures/PNG/}{X/figures/PDF/}{X/figures/}}
+\else
+    \graphicspath{{X/figures/EPS/}{X/figures/}}
+\fi
+
+%: ----------------------- contents from here ------------------------
+
+
+
+
+
+
+
+% ---------------------------------------------------------------------------
+%: ----------------------- end of thesis sub-document ------------------------
+% ---------------------------------------------------------------------------
+
